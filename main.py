@@ -7,7 +7,7 @@ from PIL import Image
 app = FastAPI()
 
 # Load mô hình đã huấn luyện
-MODEL_PATH = "D:/yolo3/runs/classify/train/weights/best.pt"
+MODEL_PATH = "runs/classify/train/weights/best.pt"
 model = YOLO(MODEL_PATH)
 
 @app.post("/predict/")
@@ -19,7 +19,15 @@ async def predict(file: UploadFile = File(...)):
     # Dự đoán
     results = model(image)
     
-    # Lấy nhãn dự đoán
-    predicted_label = results[0].names[results[0].probs.top1]
+    # Kiểm tra xem có xác suất dự đoán không
+    if not hasattr(results[0], "probs"):
+        return {"error": "Model output does not contain probability scores"}
+
+    # Lấy top 5 nhãn dự đoán và xác suất tương ứng
+    top5_indices = results[0].probs.top5  # Lấy index của 5 kết quả cao nhất
+    top5_labels = [results[0].names[i] for i in top5_indices]
+    top5_confidences = [results[0].probs.data[i].item() for i in top5_indices]  # Chuyển đổi sang float
     
-    return {"filename": file.filename, "predicted_label": predicted_label}
+    predictions = [{"label": label, "confidence": conf} for label, conf in zip(top5_labels, top5_confidences)]
+    
+    return {"filename": file.filename, "predictions": predictions}
