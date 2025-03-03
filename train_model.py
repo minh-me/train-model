@@ -4,4 +4,4 @@ from ultralytics import YOLO
 model = YOLO("yolo11n-cls.pt")  
 
 # Huấn luyện với tập dữ liệu đã tải về
-model.train(data="D:/yolo3/Jewellery-Classification-1", epochs=50, imgsz=224)
+model.train(data="D:/yolo3/leaf-classification-1", epochs=50, imgsz=224)
