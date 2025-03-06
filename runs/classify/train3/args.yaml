@@ -1,7 +1,7 @@
 task: classify
 mode: train
 model: yolo11n-cls.pt
-data: D:/yolo3/LEAF-2/data.yaml
+data: D:/yolo3/EuroCoins-1
 epochs: 50
 time: null
 patience: 100

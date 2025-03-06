@@ -7,7 +7,7 @@ import os
 app = FastAPI()
 
 # Load mô hình đã huấn luyện
-MODEL_PATH = "D:/yolo3/runs/classify/train2/weights/best.pt"
+MODEL_PATH = "runs/classify/train10/weights/best.pt"
 model = YOLO(MODEL_PATH)
 
 # Thư mục lưu ảnh tạm thời
