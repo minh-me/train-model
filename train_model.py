@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 # Load mô hình phân loại
-model = YOLO("yolo11x-cls.pt", task="classify")
+model = YOLO("yolo11l-cls.pt", task="classify")
 
 # Freeze 7 tầng đầu (giảm từ 10 để mô hình học tốt hơn nếu dữ liệu lớn)
 freeze_layers = 7
@@ -13,14 +13,14 @@ for i, (name, param) in enumerate(model.model.named_parameters()):
 
 # Huấn luyện
 model.train(
-    data="D:\\Izi\\train-model\\euro-coins",
+    data="/home/ubuntu/train-model/euro-coins",
     epochs=100,
     imgsz=224,
-    batch=16,  # Tăng batch nếu dùng GPU
-    # batch=8,  # Tăng batch nếu dùng GPU
+    # batch=16,  # Tăng batch nếu dùng GPU
+    batch=8,  # Tăng batch nếu dùng GPU
     patience=20,  # Tăng patience để hội tụ tốt hơn
-    device=0,  # Sử dụng GPU nếu có
-    # device='cpu',  # Sử dụng GPU nếu có
+    # device=0,  # Sử dụng GPU nếu có
+    device='cpu',  # Sử dụng GPU nếu có
     optimizer='AdamW',
     lr0=0.001,  # Tăng learning rate nhẹ
     lrf=0.2,

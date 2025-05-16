@@ -3,21 +3,32 @@ from pydantic import BaseModel
 from ultralytics import YOLO
 import requests
 import os
+import clip
+import torch
+from build_index import build_index  # Import từ build_index.py
+from query_image import query_image  # Import từ query_image.py
 
 # Khởi tạo FastAPI
 app = FastAPI()
 
-# Load từng mô hình riêng
+# Load từng mô hình YOLO riêng
 MODELS = {
-    "euro-coins": YOLO("runs/classify/euro-coins/weights/best.pt"),
-    "gemstone": YOLO("runs/classify/gemstone/weights/best.pt"),
-    "jewellery": YOLO("runs/classify/jewellery/weights/best.pt"),
-    "leaf": YOLO("runs/classify/leaf/weights/best.pt"),
+    "gemstone": YOLO("D:\\Izi\\train-model\\runs\\classify\\gemstone\\weights\\best.pt"),
+    "jewellery": YOLO("D:\\Izi\\train-model\\runs\\classify\\jewellery\\weights\\best.pt"),
+    "leaf": YOLO("D:\\Izi\\train-model\\runs\\classify\\leaf\\weights\\best.pt"),
 }
 
 # Thư mục lưu ảnh tạm thời
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "D:\\Izi\\train-model\\uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Cấu hình cho CLIP+FAISS
+DATASET_DIR = "D:\\Izi\\train-model\\euro-coins\\train"
+INDEX_PATH = "D:\\Izi\\train-model\\faiss_index.index"
+LABELS_PATH = "D:\\Izi\\train-model\\labels.pkl"
+DEVICE = "cpu"  # hoặc "cuda" nếu có GPU
+CLIP_MODEL, CLIP_PREPROCESS = clip.load("ViT-B/32", device=DEVICE)
+print("✅ CLIP loaded!")
 
 class ImageURL(BaseModel):
     url: str
@@ -72,5 +83,60 @@ async def predict(category: str, image: ImageURL):
         "category": category,
         "predicted_label": top_predictions[0]["label"],
         "confidence": top_predictions[0]["confidence"],
-        "topList": top_predictions[1:]  # 3 lựa chọn liên quan khác
+        "topList": top_predictions[1:]  # 2 lựa chọn liên quan khác
     }
+
+@app.post("/predict-clip/euro-coins/")
+async def predict_clip(image: ImageURL):
+    # Chỉ dành cho euro-coins
+    category = "euro-coins"
+
+    # Tải ảnh từ URL
+    response = requests.get(image.url, stream=True)
+    if response.status_code != 200:
+        return {"error": "Failed to download image from URL"}
+
+    # Lưu ảnh tạm thời
+    filename = os.path.basename(image.url.split("?")[0])
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    
+    with open(file_path, "wb") as buffer:
+        for chunk in response.iter_content(1024):
+            buffer.write(chunk)
+
+    # Dự đoán với CLIP+FAISS
+    try:
+        results = query_image(file_path, CLIP_MODEL, CLIP_PREPROCESS, top_k=4, device=DEVICE)
+        if not results:
+            os.remove(file_path)
+            return {"error": "Không thể dự đoán. Kiểm tra ảnh hoặc chỉ mục FAISS."}
+
+        # Định dạng kết quả giống YOLO
+        top_predictions = [
+            {
+                "label": label,
+                "confidence": f"{sim * 100:.2f}%"
+            }
+            for label, sim in results
+        ]
+
+        # Xóa ảnh sau khi dự đoán
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+
+        return {
+            "image_url": image.url,
+            "category": category,
+            "predicted_label": top_predictions[0]["label"],
+            "confidence": top_predictions[0]["confidence"],
+            "topList": top_predictions[1:]  # 2 lựa chọn liên quan
+        }
+
+    except Exception as e:
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+        return {"error": f"Lỗi khi dự đoán: {str(e)}"}
