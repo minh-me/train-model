@@ -5,10 +5,10 @@ import faiss
 from PIL import Image
 import pickle
 import torch  # Thêm import torch
-from build_index import build_index  # Absolute import
+# from build_index import build_index  # Absolute import
 
 # ========== CONFIG ==========
-DATASET_DIR = "D:\\Izi\\train-model\\euro-coins\\train"  # Thư mục chứa ảnh
+# DATASET_DIR = "D:\\Izi\\train-model\\euro-coins\\train"  # Thư mục chứa ảnh
 INDEX_PATH = "D:\\Izi\\train-model\\faiss_index.index"   # Đường dẫn tuyệt đối
 LABELS_PATH = "D:\\Izi\\train-model\\labels.pkl"         # Đường dẫn tuyệt đối
 DEVICE = "cpu"  # hoặc "cuda" nếu có GPU
@@ -27,9 +27,9 @@ def extract_features(image_path, model, preprocess, device=DEVICE):
 # ========== Truy vấn ảnh tương tự ==========
 def query_image(image_path, model, preprocess, top_k=5, device=DEVICE):
     # Kiểm tra file chỉ mục và nhãn
-    if not os.path.exists(INDEX_PATH) or not os.path.exists(LABELS_PATH):
-        print(f"Chỉ mục ({INDEX_PATH}) hoặc nhãn ({LABELS_PATH}) không tồn tại. Xây dựng lại...")
-        build_index(DATASET_DIR, model, preprocess, device)
+    # if not os.path.exists(INDEX_PATH) or not os.path.exists(LABELS_PATH):
+    #     print(f"Chỉ mục ({INDEX_PATH}) hoặc nhãn ({LABELS_PATH}) không tồn tại. Xây dựng lại...")
+    #     build_index(DATASET_DIR, model, preprocess, device)
 
     # Load chỉ mục và nhãn
     index = faiss.read_index(INDEX_PATH)

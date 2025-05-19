@@ -5,7 +5,7 @@ import requests
 import os
 import clip
 import torch
-from build_index import build_index  # Import từ build_index.py
+# from build_index import build_index  # Import từ build_index.py
 from query_image import query_image  # Import từ query_image.py
 
 # Khởi tạo FastAPI
