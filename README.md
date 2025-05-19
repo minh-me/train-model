@@ -3,6 +3,10 @@
 ## Cài đặt môi trường
 
 ```bash
+git checkout yolo-v2
+```
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -28,4 +32,12 @@ python predict.py
 
 ```bash
 python main.py
+```
+
+## Build với Clip
+```bash
+pip install clip
+pip install git+https://github.com/openai/CLIP.git
+source /path/to/your/venv/bin/activate  # On Linux/Mac
+python /home/train-model/build_index.py
 ```
